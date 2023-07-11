@@ -1,4 +1,5 @@
-def interpreter(code)
+def interpreter(code, debug=false)
+  puts "PROGRAM START"
   cell_ptr = 0
   code_ptr = 0
   call_stack = []
@@ -6,9 +7,9 @@ def interpreter(code)
   # negative_offset = 0
 
   until code_ptr == code.size do
-    sleep 0.1
-    p "code_ptr: #{code_ptr}; cell_ptr: #{cell_ptr}"
-    p cells
+    sleep 0.1 if debug
+    p "code_ptr: #{code_ptr}; cell_ptr: #{cell_ptr}" if debug
+    p cells if debug
     case code[code_ptr]
     when '.'
       print cells[cell_ptr].chr
@@ -24,7 +25,10 @@ def interpreter(code)
       call_stack << code_ptr
     when "]"
       if cells[cell_ptr] == 0
-        return "ERR: INVALID RETURN ADDRESS (Mismatched ']') @ #{code_ptr}" unless call_stack.pop
+        unless call_stack.pop
+          puts "ERR: INVALID RETURN ADDRESS (Mismatched ']') @ #{code_ptr}"
+          return
+        end
         code_ptr += 1
         next
       else
@@ -35,14 +39,18 @@ def interpreter(code)
       cells << 0 if cells[cell_ptr].nil?
       code_ptr += 1
     when "<"
-      return "ERR: NEGATIVE CELL @ #{code_ptr}" if cell_ptr == 0
+      if cell_ptr == 0
+        puts "ERR: NEGATIVE CELL @ #{code_ptr}" if cell_ptr == 0
+        return
+      end
       cell_ptr -= 1
       code_ptr += 1
     else
-      return "ERR: INVALID SYMBOL '#{code[code_ptr]}' @ #{code_ptr}"
+      puts "ERR: INVALID SYMBOL '#{code[code_ptr]}' @ #{code_ptr}"
+      return
     end
   end
-  return "PROGRAM END"
+  puts "PROGRAM END"
 end
 
 if ARGV.size != 1
@@ -53,4 +61,4 @@ end
 code = File.open(ARGV[0], "r").readlines.map(&:strip).join("");
 # p code
 
-p interpreter(code)
+puts interpreter(code)
