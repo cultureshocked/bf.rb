@@ -21,18 +21,34 @@ def interpreter(code, debug=false)
       cells[cell_ptr] -= 1
       code_ptr += 1
     when "["
-      code_ptr += 1
-      call_stack << code_ptr
-    when "]"
       if cells[cell_ptr] == 0
-        unless call_stack.pop
-          puts "ERR: INVALID RETURN ADDRESS (Mismatched ']') @ #{code_ptr}"
-          return
-        end
+        bracket_stack = [code_ptr]
         code_ptr += 1
+        until bracket_stack.size == 0
+          if code_ptr == code.size
+            puts "ERR: MISMATCHED LOOP BRACKETS FROM #{bracket_stack[0]}"
+            return
+          end
+
+          case code[code_ptr]
+          when '['
+            bracket_stack << code_ptr
+          when ']'
+            bracket_stack.pop
+          else
+
+          end
+          code_ptr += 1
+        end
         next
-      else
-        code_ptr = call_stack[-1]
+      end
+      call_stack << code_ptr
+      code_ptr += 1
+    when "]"
+      code_ptr = call_stack.pop
+      if code_ptr.nil?
+        puts "ERR: INVALID RETURN ADDRESS (Mismatched ']') @ #{code_ptr}"
+        return
       end
     when ">"
       cell_ptr += 1
@@ -45,6 +61,9 @@ def interpreter(code, debug=false)
       end
       cell_ptr -= 1
       code_ptr += 1
+    when ' '
+      code_ptr += 1
+      next
     else
       puts "ERR: INVALID SYMBOL '#{code[code_ptr]}' @ #{code_ptr}"
       return
@@ -61,4 +80,4 @@ end
 code = File.open(ARGV[0], "r").readlines.map(&:strip).join("");
 # p code
 
-puts interpreter(code)
+interpreter(code)
